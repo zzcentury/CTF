@@ -1,0 +1,7 @@
+之前不了解tcache，看了几篇大佬的博客，觉得这机制让堆利用更方便了
+
+先申请一个gundam1,再调用destory函数释放A 0x300这块堆，它进入对应的tcache_bin,由于destory函数没有清空指针。所以再调用destory函数释放这块A 0x300的堆，造成double-free.tcache里就形成循环链了。之后类似fastbin-attack的机制。先申请一个gundam2,分配给它的0x300堆块便是tcache里的那块A，假设我们将它的fd指针设置为free_hook地址。此时我们再申请一个gundam2，申请的0x300还那块A,不过由于此时A的fd指针刚被我们修改为free_hook,所以free_hook将是下一块tcache了，利用这个思路，我们可以完成返回任意地址攻击。这个机制比以往的fastbin-attack更危险，因为它不会验证当前申请tcache的size.(此外，上述我们应该多在tcache里设置几块堆，因为tcache会记录当前tcache块数量）
+
+基本原理清楚了，这个题就简单了。
+
+先泄露libc地址，再改写free_hook.最终完成get shell.

